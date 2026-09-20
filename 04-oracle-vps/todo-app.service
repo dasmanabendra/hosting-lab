@@ -1,0 +1,17 @@
+[Unit]
+Description=Todo list app (FastAPI/uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/hosting/04-oracle-vps
+ExecStart=/home/ubuntu/hosting/04-oracle-vps/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# Restart the app if it crashes, and again on boot. This is the piece
+# Cloud Run gave us for free in stage 3.
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

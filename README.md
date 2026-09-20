@@ -15,9 +15,31 @@ what those platforms can and can't do.
 | # | Stage | What hosts it | What it teaches |
 |---|-------|----------------|------------------|
 | 00 | [Local app](00-local-app/) | Your machine | The app itself: FastAPI + SQLite, run with `uvicorn` |
-| 01 | GitHub Pages | GitHub (static) | Static hosting's ceiling: no backend, no shared state (localStorage only) |
-| 02 | Streamlit Community Cloud | Streamlit's cloud | A real Python backend, zero infra — connect a repo, click deploy |
-| 03 | Google Cloud Run | Google Cloud | Containers (Docker), autoscaling, and why stateless storage breaks SQLite |
-| 04 | Oracle Cloud VM | Oracle Cloud | Everything Cloud Run did for you, done by hand: SSH, systemd, nginx, TLS, DNS |
+| 01 | [GitHub Pages](01-github-pages/) | GitHub (static) | Static hosting's ceiling: no backend, no shared state (localStorage only) |
+| 02 | [Streamlit Community Cloud](02-streamlit/) | Streamlit's cloud | A real Python backend, zero infra — connect a repo, click deploy |
+| 03 | [Google Cloud Run](03-google-cloud-run/) | Google Cloud | Containers (Docker), autoscaling, and why stateless storage breaks SQLite |
+| 04 | [Oracle Cloud VM](04-oracle-vps/) | Oracle Cloud | Everything Cloud Run did for you, done by hand: SSH, systemd, nginx, TLS, DNS |
 
 Start at [00-local-app](00-local-app/).
+
+## Status
+
+Code for all five stages is written. What's verified and what still needs
+doing:
+
+| Stage | Built | Tested locally | Deployed |
+|---|---|---|---|
+| 00 Local app | yes | yes — add/toggle/delete all work | n/a |
+| 01 GitHub Pages | yes | yes — add/toggle/delete all work | no |
+| 02 Streamlit | yes | yes — add/toggle/delete all work | no |
+| 03 Cloud Run | yes | not yet — Docker daemon wasn't running | no |
+| 04 Oracle VM | yes | scripts syntax-checked only; needs a real VM | no |
+
+Every remaining step needs an account: a GitHub repo to push to, a
+Streamlit Community Cloud login, a Google Cloud project with billing
+enabled, and an Oracle Cloud account with a provisioned VM. Those are
+deliberately left for a session together rather than done unattended.
+
+**No secrets belong in this repo.** It needs to be public for Streamlit's
+free tier, so credentials stay in `.gitignore`'d local files, GitHub Actions
+secrets, or the cloud provider's own console — never in tracked files.
