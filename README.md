@@ -30,7 +30,7 @@ doing:
 | Stage | Built | Tested locally | Deployed |
 |---|---|---|---|
 | 00 Local app | yes | yes — add/toggle/delete all work | n/a |
-| 01 GitHub Pages | yes | yes — add/toggle/delete all work | no |
+| 01 GitHub Pages | yes | yes — add/toggle/delete all work | **yes — [live](https://dasmanabendra.github.io/hosting-lab/)** |
 | 02 Streamlit | yes | yes — add/toggle/delete all work | no |
 | 03 Cloud Run | yes | not yet — Docker daemon wasn't running | no |
 | 04 Oracle VM | yes | scripts syntax-checked only; needs a real VM | no |
@@ -44,16 +44,14 @@ deliberately left for a session together rather than done unattended.
 
 In rough order, easiest first:
 
-1. **Start Docker Desktop** (it's installed but its engine wasn't running —
+1. ~~Create a GitHub repo and push.~~ Done — [dasmanabendra/hosting-lab](https://github.com/dasmanabendra/hosting-lab).
+2. ~~Turn on GitHub Pages.~~ Done — stage 1 is live and redeploys on every
+   push to `main` via [the workflow](.github/workflows/deploy-pages.yml).
+3. **Deploy stage 2** — sign in to Streamlit Community Cloud with GitHub,
+   point it at `02-streamlit/app.py`.
+4. **Start Docker Desktop** (installed, but its engine wasn't running —
    probably a first-run dialog). Then `docker build` stage 3 locally to
    confirm the container works before involving Google.
-2. **Create a GitHub repo and push this code.** Everything downstream needs
-   it: Pages serves from it, Streamlit connects to it, the VM pulls from it.
-   It needs to be public for Streamlit's free tier.
-3. **Turn on GitHub Pages** (Settings → Pages → source: GitHub Actions).
-   The workflow is already written; stage 1 goes live on the next push.
-4. **Deploy stage 2** — sign in to Streamlit Community Cloud with GitHub,
-   point it at `02-streamlit/app.py`.
 5. **Deploy stage 3** — Google Cloud account, then `gcloud run deploy`.
    Then wait for it to scale to zero and watch the todos disappear.
 6. **Deploy stage 4** — Oracle account, provision an Always Free VM, then
