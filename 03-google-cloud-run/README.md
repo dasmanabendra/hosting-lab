@@ -144,3 +144,37 @@ deploy; the same image runs anywhere.
 **Costs:** you must learn containers; **no persistent local storage at all**,
 so any real app needs a separate managed database; cold starts after idle;
 usage-based billing that could charge you under heavy traffic.
+
+---
+
+## Appendix: every term used on this page
+
+| Term | Plain explanation |
+|---|---|
+| **Container** | A frozen snapshot of an app *plus everything it needs to run* — a miniature operating system, the Python interpreter, the libraries, the code. It runs identically anywhere, because it carries its whole world with it. |
+| **Image** | The snapshot file itself. A container is a running copy of an image. (Image is to container roughly as a recipe is to a meal.) |
+| **Docker** | The most common tool for building and running containers. |
+| **Docker Desktop** | The Windows/Mac application that runs Docker on your machine. Its background service is the "engine" — the thing that wouldn't start here. |
+| **Dockerfile** | The plain-text recipe for building an image: start from this base, install that, copy this in, run this command. |
+| **Registry** | Online storage for images, so a cloud service can download and run yours. Google's is called Artifact Registry. |
+| **Base image (`FROM`)** | The starting point you build on — here `python:3.12-slim`, a minimal Linux with Python already installed. "slim" means stripped of everything unnecessary, so it's smaller and faster to ship. |
+| **`WORKDIR` / `COPY` / `RUN` / `CMD`** | Dockerfile instructions: set the working folder, copy files in, execute a command while building, and define the command to run when the container starts. |
+| **Layer / build cache** | Each Dockerfile line produces a cached layer. Unchanged steps are reused on later builds — which is why dependencies are installed *before* code is copied. Otherwise every code edit would reinstall everything. |
+| **`0.0.0.0` vs `127.0.0.1`** | `127.0.0.1` means "reachable only from this same machine"; `0.0.0.0` means "reachable from outside too." Inside a container you need `0.0.0.0`, or the platform can't reach the app. In stage 4 the correct answer flips, because nginx sits in front. |
+| **Environment variable** | A named value handed to a program from outside, rather than written into its code. Cloud Run sets `PORT` to tell the container which port to use. |
+| **`exec`** | Makes the started program replace the shell that launched it, so shutdown signals reach the app directly and it can stop cleanly. |
+| **`.dockerignore`** | A list of files to keep *out* of the image — here the virtual environment, caches, and any local database file, which must never be baked in. |
+| **Port mapping (`-p 8080:8080`)** | Connects a port on your machine to a port inside the container. Without it the container is sealed off and unreachable. |
+| **Stateless** | Every request starts from a blank slate; nothing written to disk is expected to survive. The defining property of Cloud Run, and what breaks SQLite here. |
+| **Scale to zero** | The platform shuts the app down completely when no one is using it, and starts it again on the next request. Why it costs nothing while idle. |
+| **Autoscaling** | Automatically running more copies when traffic rises, fewer when it falls. |
+| **Instance** | One running copy of your container. Several can exist at once — each with its own separate, empty filesystem. |
+| **Cold start** | The delay while a stopped container boots to serve the first request after idle time. |
+| **Load balancing** | Spreading incoming requests across multiple running copies. Cloud Run does it for you. |
+| **Managed database** | A database run as a separate service (Cloud SQL, Firestore) that lives *outside* your containers and therefore survives them. The real fix for the problem on this page. |
+| **`gcloud`** | Google Cloud's command-line tool. |
+| **`--source .`** | Tells `gcloud` to build the image from the current folder's Dockerfile rather than from a pre-built image. |
+| **`--allow-unauthenticated`** | Makes the service a public website. Without it, visitors would need Google credentials to load the page. |
+| **Region** | Which datacenter your app runs in (`us-central1` here). Closer regions mean lower latency for nearby visitors. |
+| **Billing account** | A payment method on file. Required even to use the free tier, because usage beyond it is charged. |
+| **WSL** | "Windows Subsystem for Linux" — the Linux environment Windows uses to run Docker. Docker Desktop's engine runs inside it, which is why its state matters when Docker won't start. |

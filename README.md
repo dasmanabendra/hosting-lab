@@ -23,9 +23,56 @@ variable is the hosting model.
 
 ---
 
+## Before you start: the mechanics
+
+This project is written for someone who isn't a software developer. If the
+commands in these files look like gibberish, this section is the missing
+context. Nothing here is conceptually hard — it's just unfamiliar.
+
+**The terminal** is a window where you type commands instead of clicking.
+On Windows that's PowerShell; on Mac/Linux it's Terminal. When a README
+shows a line in a grey box, it means "type this into that window and press
+Enter." Commands run inside a *current folder*, which is why you'll often
+`cd` (change directory) somewhere first.
+
+**Python doesn't come with the libraries an app needs.** They're installed
+separately, and different projects want different versions of the same
+library — which would collide if everything shared one pile. So each
+project gets a **virtual environment**: a private folder (here, `.venv`)
+holding that project's own copy of Python and its libraries.
+
+```bash
+python -m venv .venv      # create the private environment (once)
+.venv\Scripts\pip install -r requirements.txt   # install this project's libraries into it
+```
+
+`pip` is Python's installer. `requirements.txt` is just a list of library
+names and versions — the "shopping list" pip reads. Running the app from
+`.venv\Scripts\` rather than plain `python` is what makes it use that
+private environment instead of your system-wide one.
+
+**Git and GitHub are two different things.** Git records snapshots of your
+files over time, on your own machine. GitHub is a website that stores a
+copy of that history online so it can be shared — and, for us, so hosting
+platforms can fetch the code. You'll see this vocabulary constantly:
+
+- **repository (repo)** — one project's folder plus its whole history
+- **commit** — one saved snapshot, with a message describing what changed
+- **push** — upload your commits to GitHub
+- **pull** — download commits from GitHub
+- **clone** — make a local copy of a GitHub repo for the first time
+- **branch** — a parallel line of history; ours is called `main`
+
+**Nothing here can break your computer.** The worst case is an app that
+won't start, which you fix by reading the error and trying again.
+
+---
+
 ## Glossary
 
 Terms used throughout, in plain language. Skim now, refer back later.
+
+### Hosting and web concepts
 
 | Term | What it actually means |
 |---|---|
@@ -51,6 +98,23 @@ Terms used throughout, in plain language. Skim now, refer back later.
 | **Cold start** | The delay while a stopped app boots to serve the first request after idle time. |
 | **CI/CD** | Automation that builds/deploys your code when you push it. Ours is the GitHub Actions workflow that publishes stage 1. |
 | **PaaS / IaaS** | PaaS (Streamlit, Cloud Run) = you bring code, they run it. IaaS (Oracle VM) = they hand you a bare computer and wish you luck. |
+| **CDN** | A network of servers worldwide holding copies of your files, so visitors are served from one near them. GitHub Pages does this automatically. |
+| **VM (virtual machine)** | A whole computer that exists as software inside a bigger physical machine. Behaves exactly like a real one; you rent it by the hour (or free, on Oracle's tier). |
+
+### Tools and workflow
+
+| Term | What it actually means |
+|---|---|
+| **Terminal / command line** | The window where you type commands. PowerShell on Windows. |
+| **Virtual environment (`.venv`)** | A per-project private copy of Python and its libraries, so projects don't interfere with each other. |
+| **pip** | Python's library installer. Reads `requirements.txt`. |
+| **Dependency / library / package** | Code someone else wrote that your app uses rather than reinventing. FastAPI and Streamlit are dependencies. |
+| **Repo, commit, push, pull, clone, branch** | Git vocabulary — see "Before you start" above. |
+| **SSH** | A way to get a terminal on a *remote* computer over the internet, securely. How you reach the Oracle VM in stage 4. |
+| **SSH key** | A pair of files — one secret, one public — that proves who you are when connecting, instead of a password. The secret half must never be committed. |
+| **root / sudo** | Administrator rights on a Linux machine. `sudo` means "run this command as the administrator." |
+| **Environment variable** | A named value passed to a program from outside it, rather than written into the code. Cloud Run uses one (`PORT`) to tell the container which port to listen on. |
+| **Wheel** | A pre-built, ready-to-install package. When one doesn't exist for your Python version, pip tries to build from source instead — which is slower and often fails. |
 
 ---
 

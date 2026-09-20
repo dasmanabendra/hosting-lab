@@ -96,17 +96,29 @@ this whole repo is public, and why no credentials can ever be committed.
 
 ## Gotchas hit
 
-- **A stateful `st.checkbox` fights the database.** The first version used a
-  checkbox per row, comparing its return value against the stored `done`
-  flag to detect a toggle. It silently never toggled: Streamlit keeps
-  widget state in its own session store keyed by the widget's `key`, so the
-  widget and the database disagreed about who was the source of truth. A
-  plain `st.button` is stateless — it returns `True` once, on the click —
-  which makes the database unambiguously authoritative. Same fix pattern
-  applies to any Streamlit widget driving external state.
-- **Streamlit 1.38 won't install on Python 3.14.** It pins a Pillow version
-  with no 3.14 wheel, so pip tries to compile it from source and fails on a
-  missing zlib. Version 1.64.0 installs cleanly — that's what's pinned.
+- **Checkboxes silently refused to work.** The first version put a checkbox
+  next to each todo and compared the checkbox's state to the database to
+  decide whether you'd just ticked it. Clicking did nothing at all.
+
+  The reason: Streamlit remembers each checkbox's own state internally,
+  separately from the database. So two things both believed they knew
+  whether a todo was done, and they disagreed — the code couldn't tell a
+  real click from Streamlit's remembered state.
+
+  The fix was to use a plain button instead. A button remembers nothing —
+  it simply reports "I was clicked just now," which leaves the database as
+  the only thing tracking whether a todo is done. **General lesson:** when
+  something has to be stored, exactly one place should be in charge of
+  storing it.
+
+- **Streamlit 1.38 wouldn't install on this machine.** That version requires
+  an older image-handling library that has no ready-made package for Python
+  3.14 (installed here). Without one, the installer tried to build it from
+  scratch and failed on a missing system component. Version 1.64.0 has
+  ready-made packages and installs cleanly — that's what's pinned in
+  `requirements.txt`. **General lesson:** version conflicts between a
+  library and your Python version are common, and the usual fix is moving
+  to a newer version rather than fighting the build.
 
 ---
 
@@ -122,3 +134,32 @@ locked into Streamlit's UI conventions. Also: your repo must be public.
 Stage 3 keeps the "someone else runs it" convenience but hands back control
 of the environment — via containers — and in doing so breaks persistence
 completely.
+
+---
+
+## Appendix: every term used on this page
+
+| Term | Plain explanation |
+|---|---|
+| **Backend** | Code that runs *on the server* when a request arrives. It can read a database and give different answers to different visitors. Stage 1 had none; this stage does. |
+| **Frontend** | Code that runs in the visitor's browser. In Streamlit you don't write it — Streamlit generates it for you. |
+| **Streamlit** | A Python framework for building web interfaces without writing HTML or JavaScript. You call functions like `st.button()` and it renders the page. |
+| **Framework** | A pre-built skeleton handling the universal parts of a job so you only write what's unique to your app. |
+| **Rerun** | Streamlit's core mechanic: on every interaction, the *entire script runs again from the top*, and whatever it produces becomes the new page. `st.rerun()` triggers this manually after a database write. |
+| **Widget** | One interactive element — a button, a checkbox, a text box. |
+| **Session** | One visitor's ongoing use of the app. Streamlit keeps some state per session, which is what caused the checkbox problem above. |
+| **State** | Information that has to be remembered. The central question of this whole project is *where* it's remembered and *who* is in charge of it. |
+| **Source of truth** | The single place that authoritatively knows a fact. The checkbox bug happened because two things both thought they were it. |
+| **SQLite** | A database that is just one file on disk. No separate program to install. |
+| **Database** | Where a backend keeps data so it survives after a request finishes. |
+| **User accounts / authentication** | Letting people log in, so the app can tell visitors apart and show each their own data. This app has none, which is why everyone shares one list. |
+| **Managed / PaaS** | "Platform as a Service" — you supply code, they supply everything else: machine, operating system, web server, HTTPS, restarts. Streamlit and Cloud Run are both PaaS. |
+| **Container** | A frozen snapshot of an app plus everything it needs to run. Streamlit builds one for you behind the scenes; in stage 3 you write the recipe yourself. |
+| **Sleep / idle** | Free-tier platforms shut apps down when nobody's using them, to save resources. |
+| **Cold start** | The delay while a sleeping app wakes up to answer the first request — 10–30 seconds here. |
+| **Redeploy** | Pushing a new version, which replaces the running one. On this platform it can also wipe the database file, since a fresh container starts from scratch. |
+| **Persistence** | Whether data actually survives over time. Guaranteed on a VM (stage 4), unreliable here, effectively absent in stage 3. |
+| **Free tier** | The portion of a paid service given away at no cost, with limits attached. Streamlit's requires your repo be public. |
+| **Public repo** | A GitHub repository anyone can read. Required by Streamlit's free tier — and the reason no credentials may ever be committed here. |
+| **`requirements.txt`** | The list of libraries the app needs. Streamlit reads it automatically when deploying. |
+| **Pin (a version)** | Specifying an exact version (`streamlit==1.64.0`) rather than "whatever's newest," so the app doesn't break when a library changes. |

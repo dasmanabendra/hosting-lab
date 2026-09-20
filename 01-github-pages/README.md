@@ -118,3 +118,32 @@ whose data belongs to one browser. Wrong for anything where two people need
 to see the same thing.
 
 That limitation is what drives stage 2.
+
+---
+
+## Appendix: every term used on this page
+
+| Term | Plain explanation |
+|---|---|
+| **Static hosting** | The server only hands over files exactly as they are. It never runs your code, never opens a database. Fast, cheap, and unable to remember anything. |
+| **Static site** | A website made only of such files: HTML, CSS, JavaScript, images. |
+| **HTML** | The language describing what a page contains — headings, text, buttons. |
+| **CSS** | The language describing how it looks — colours, spacing, fonts. In this stage it's inside the same file, in a `<style>` block. |
+| **JavaScript** | The only programming language browsers run. On a static site it's the *only* place your logic can live, since there's no server executing anything. |
+| **Browser** | The visitor's program — Chrome, Firefox, Edge. On this stage, it does all the work. |
+| **`localStorage`** | A small storage box the browser gives each website, saved on that device. Survives reloads and restarts, but never leaves that one browser. |
+| **View source** | The browser feature showing a page's underlying code. On a static site this reveals *everything*, which is why secrets can never live here. |
+| **API key / secret** | A password-like string that proves an app may use some paid or private service. Must never appear in code that ships to visitors. |
+| **CDN** | A worldwide network of servers each holding a copy of your files, so visitors are served from one physically near them. GitHub Pages does this for free. |
+| **HTTPS** | The encrypted version of web traffic — the padlock in the address bar. GitHub provides and renews it automatically here; in stage 4 you set it up by hand. |
+| **Repository (repo)** | One project's folder plus its complete history, stored by Git. |
+| **Branch / `main`** | A line of history within a repo. Ours is called `main`; pushing to it triggers the deploy. |
+| **Push** | Uploading your saved snapshots (commits) from your machine to GitHub. |
+| **GitHub Actions** | GitHub's automation service. It can run commands for you whenever something happens — here, on every push. |
+| **Workflow** | One automation recipe, written as a `.yml` file in `.github/workflows/`. Ours has three steps: check out the code, package a folder, publish it. |
+| **YAML (`.yml`)** | A plain-text format for configuration, where indentation indicates structure. |
+| **Artifact** | A bundle of files produced by one workflow step and handed to the next. Here it's the contents of `01-github-pages/`. |
+| **CI/CD** | "Continuous integration / continuous deployment" — the practice of having automation build and publish your work automatically instead of by hand. This workflow is a small, real example. |
+| **`gh`** | GitHub's official command-line tool, used here to create the repo and enable Pages without opening a browser. |
+| **API** | A way for programs to talk to a service directly instead of through its website. `gh api` calls GitHub's API to change repo settings. |
+| **Deploy** | To make a new version of your code the one that's actually live. |

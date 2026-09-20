@@ -160,3 +160,47 @@ is now something you built and must maintain yourself.
 That's the whole lesson of this project, arrived at the long way: managed
 hosting isn't doing anything magic. It's doing *these specific jobs*, and
 now you know what each one is.
+
+---
+
+## Appendix: every term used on this page
+
+| Term | Plain explanation |
+|---|---|
+| **VM (virtual machine)** | A complete computer that exists as software inside a bigger physical one. It behaves exactly like a real machine — own operating system, own disk, own network address. |
+| **IaaS** | "Infrastructure as a Service" — they rent you a bare computer and nothing else. The opposite of the managed platforms in stages 2 and 3. |
+| **Instance** | One rented VM. |
+| **Ubuntu** | A popular version of Linux, the operating system on the VM. |
+| **`apt` / `apt-get`** | Ubuntu's software installer, the system-wide equivalent of `pip`. |
+| **SSH** | A secure way to open a terminal on a *remote* computer over the internet. How you get "inside" the VM. |
+| **SSH key** | A matched pair of files — one secret, one public — proving who you are when connecting, instead of a password. The secret half must never be committed to a repo. |
+| **root / `sudo`** | Administrator rights on Linux. `sudo` means "run this one command as the administrator." Needed to install software or edit system configuration. |
+| **IP address** | The numeric address of a machine on the internet, e.g. `140.238.1.2`. Your VM gets one. |
+| **Domain** | The human-friendly name (`todo.example.com`) that points at an IP address. Costs roughly $10–15/year. |
+| **DNS** | The internet's phone book, translating domain names into IP addresses. You edit it wherever you bought the domain. |
+| **A record** | The specific DNS entry mapping a name directly to an IP address. The one you create to point your domain at the VM. |
+| **Registrar** | The company you buy a domain from, and where you edit its DNS. |
+| **Port 80 / 443** | The standard doors for web traffic: 80 for plain HTTP, 443 for encrypted HTTPS. |
+| **nginx** | A web server program that accepts public traffic. Here it acts as a reverse proxy. |
+| **Reverse proxy** | A program sitting in front of your app that receives public requests and forwards them inward. It handles HTTPS and lets the app itself stay hidden on localhost. |
+| **`proxy_pass`** | The nginx setting naming where to forward requests — here, the app on `127.0.0.1:8000`. |
+| **`proxy_set_header`** | Passes along details about the original visitor (their real IP, whether they used HTTPS). Without these, the app would think every request came from nginx itself. |
+| **`127.0.0.1` / localhost** | "This machine only." Binding the app here means the internet cannot reach it directly — the only way in is through nginx. Deliberately the opposite of stage 3's `0.0.0.0`. |
+| **systemd** | Linux's process manager. It starts programs at boot, keeps them running, and restarts them if they crash. |
+| **Unit file / service** | The configuration file telling systemd how to run one program — `todo-app.service` here. |
+| **`Restart=always`** | The setting that brings the app straight back if it crashes. |
+| **`WantedBy=multi-user.target`** | The setting that starts the app automatically when the machine boots. |
+| **TLS** | The encryption behind HTTPS. "TLS terminates here" means nginx is where encrypted traffic is decrypted before being passed inward. |
+| **Certificate** | A file proving you control a domain. Browsers refuse to show the padlock without one. Issued for *names*, never for bare IP addresses — which is why HTTPS needs a domain. |
+| **Let's Encrypt** | A nonprofit certificate authority issuing certificates free of charge. |
+| **certbot** | The tool that requests a Let's Encrypt certificate, installs it into nginx, and sets up automatic renewal. |
+| **Challenge** | How certbot proves you control the domain: Let's Encrypt asks for a specific response over port 80, and only the real server can give it. |
+| **Renewal** | Certificates expire every 90 days. certbot installs a timer to renew automatically; `--dry-run` tests that it will work before it matters. |
+| **Firewall** | Rules deciding which network traffic is allowed in. This VM has **two** — see the next two rows. |
+| **iptables** | The firewall running *on* the Linux machine itself. `setup-server.sh` configures it. |
+| **Security list** | Oracle's *network-level* firewall, configured in their web console, which blocks traffic before it ever reaches the machine. Forgetting this is the classic reason a correctly configured server appears dead. |
+| **Deploy** | Making a new version of your code the live one. Here: `git pull`, reinstall dependencies, restart the service. |
+| **Downtime** | Time when the site doesn't respond. Restarting the app causes a few seconds of it. |
+| **Zero-downtime deploy** | Starting the new version *before* stopping the old one, so visitors never see an outage. Cloud Run did this automatically; here you'd have to build it. |
+| **Patching** | Installing security updates for the operating system. Nobody does this for you on a VM. |
+| **Backup** | A copy of your data kept elsewhere, in case the machine or its disk is lost. Also now your job. |

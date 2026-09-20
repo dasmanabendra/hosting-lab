@@ -95,3 +95,37 @@ which directory you launch it from.
 Nothing runs unless you start it, nobody but you can reach it, and it stops
 when you close the terminal. Every stage after this one is about solving
 exactly that.
+
+---
+
+## Appendix: every term used on this page
+
+| Term | Plain explanation |
+|---|---|
+| **Terminal / command line** | The window where you type commands instead of clicking. PowerShell on Windows. A grey box in this README means "type this there and press Enter." |
+| **Server** | A computer (or a program on one) that stays running, waiting for requests and sending back responses. Not special hardware — your laptop is one while this app runs. |
+| **Request / response** | The entire web in two words. A browser asks for a URL (request); a server sends something back (response). |
+| **Port** | A numbered door on a computer, so one machine can run many programs that all use the network. Ours listens on port 8000. Web traffic normally uses 80 and 443. |
+| **`127.0.0.1` / localhost** | "This same computer." A program listening only here cannot be reached from the internet — which is why stage 0 is private by default. |
+| **Process** | A running program. The app is a process that must stay alive to answer requests; if it stops, the site is down. |
+| **Python** | The programming language this app is written in. |
+| **Framework** | A pre-built skeleton that handles the boring, universal parts of a job so you only write the parts unique to your app. |
+| **FastAPI** | The web framework here. It turns "a browser asked for `/todos`" into "run this specific Python function." |
+| **uvicorn** | The program that actually listens on the port and hands requests to FastAPI. FastAPI defines *what* to do; uvicorn is what's *running*. |
+| **Route / endpoint** | One URL the app knows how to answer, paired with the code that answers it — e.g. `GET /` or `POST /todos`. |
+| **`GET` / `POST`** | The two request types here. GET means "give me this page." POST means "here's some data, do something with it." Forms use POST. |
+| **Redirect (303)** | A response that says "don't render anything, go request this other URL instead." Used after every write so refreshing doesn't resubmit the form. |
+| **Post/Redirect/Get** | The name of that pattern: handle the POST, then redirect to a GET, so the browser never sits on a submitted form. |
+| **HTML** | The language describing what a web page contains. The app builds HTML as text and sends it to the browser. |
+| **Form** | The HTML element that collects input and submits it to the server. Our add/toggle/delete buttons are all tiny forms. |
+| **Database** | Where data is kept so it outlives a single request. |
+| **SQLite** | A database that is simply one file on disk (`data/todos.db`) — no separate program to install or run. Ideal for small apps, and the source of the trouble in stage 3. |
+| **Stateful** | Means the app remembers things between requests, so it needs somewhere permanent to write. The opposite, stateless, forgets everything — which is what breaks this app on Cloud Run. |
+| **Health endpoint** | A cheap URL (`/health`) that returns "I'm alive." Hosting platforms ping it to decide whether the app is working. |
+| **Virtual environment (`.venv`)** | A private, per-project copy of Python and its libraries, so different projects don't fight over versions. |
+| **pip** | Python's library installer. |
+| **Dependency / library** | Code written by someone else that your app uses. FastAPI and uvicorn are dependencies. |
+| **`requirements.txt`** | The list of dependencies and their versions — the shopping list pip reads. |
+| **`--reload`** | A development-only option that restarts the app whenever you edit a file. Never used in production. |
+| **`app.main:app`** | Tells uvicorn where to find the app: "in the file `app/main.py`, use the variable named `app`." |
+| **`python-multipart`** | A small library FastAPI needs in order to read submitted form data. Not installed automatically, hence the crash described above. |
