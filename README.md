@@ -188,6 +188,104 @@ a domain of your own.
 
 ---
 
+## The tech stack, explained
+
+A **tech stack** is just the list of technologies stacked on top of each
+other to make one working app. The word is literal: each layer sits on the
+one below and depends on it.
+
+### The layers, bottom to top
+
+For a typical web app, including ours:
+
+| Layer | Job | Ours |
+|---|---|---|
+| **Language** | What the code is written in | Python |
+| **Web framework** | Turns incoming requests into your code, and your code's output into a web page | FastAPI |
+| **Application server** | The program that actually listens on a network port and stays running | uvicorn |
+| **Database** | Stores data so it survives after a request finishes | SQLite |
+| **Reverse proxy** *(stage 4 only)* | Faces the public internet, handles HTTPS, forwards inward | nginx |
+| **Process manager** *(stage 4 only)* | Keeps the app running and restarts it | systemd |
+| **Runtime environment** | Where all of the above physically executes | Your laptop → a container → a VM |
+
+The top three layers are what "hosting" actually decides. In stage 2
+Streamlit supplies them invisibly; in stage 3 you define them in a
+Dockerfile; in stage 4 you install them yourself.
+
+### The confusing one: FastAPI vs uvicorn
+
+Beginners trip on this constantly, so: **FastAPI is a library, not a
+program.** It can't listen on a port or talk to the network. It only
+describes *what should happen* when a request for `/todos` arrives.
+
+uvicorn is the actual running program. It opens the port, waits for
+requests, and hands each one to FastAPI to decide the answer. That's why
+you type `uvicorn app.main:app` and never `python main.py` — uvicorn is
+the thing being run, and FastAPI is what it consults.
+
+The technical name for the agreement between them is **ASGI**, a standard
+saying "here's how a server hands a web request to Python code." Because
+both sides follow it, you could swap uvicorn for a different ASGI server
+without touching the app.
+
+### Why these specific choices
+
+**Python** — readable, hugely popular, and the language both FastAPI and
+Streamlit use, so the same language covers stages 0–4.
+
+**FastAPI** over Django or Flask — Django is a large framework that brings
+an admin panel, its own database layer, and strong opinions; excellent for
+big applications, far too much machinery for a todo list where hosting is
+the real subject. Flask is closer in size to FastAPI and would have worked
+fine. FastAPI wins here for automatic request validation and because it's
+what new Python web projects most commonly start with now.
+
+**uvicorn** — the standard ASGI server, and the one FastAPI's own docs
+use. `uvicorn[standard]` in `requirements.txt` means "install it with its
+recommended optional extras" (faster HTTP parsing, etc.).
+
+**SQLite** over PostgreSQL or MySQL — those run as *separate server
+programs* you must install, configure, secure, and keep running. SQLite is
+a single file with no server at all, which makes it perfect for learning
+and for small apps. It's also the honest choice pedagogically: because
+SQLite lives on the filesystem, stage 3 breaks it in a way that makes the
+stateless-hosting lesson unmissable. A managed Postgres would have quietly
+worked everywhere and taught nothing.
+
+**Plain HTML with no frontend framework** — no React, Vue, or build step.
+Server-rendered HTML keeps the app small enough that nothing distracts
+from the hosting mechanics. Stage 1 uses plain browser JavaScript for the
+same reason.
+
+**nginx** over Caddy (stage 4) — Caddy would actually be easier, since it
+obtains HTTPS certificates automatically with near-zero configuration.
+nginx is used deliberately because it's the overwhelmingly common choice
+in real deployments, and because doing certificates manually with certbot
+*shows you the step* Caddy would have hidden — which is the entire point
+of stage 4.
+
+### What the stack looks like at each stage
+
+The important column is the last one: notice how much stays identical.
+
+| Layer | 0. Local | 1. Pages | 2. Streamlit | 3. Cloud Run | 4. Oracle VM |
+|---|---|---|---|---|---|
+| **Language** | Python | JavaScript | Python | Python | Python |
+| **Framework** | FastAPI | none | Streamlit | FastAPI | FastAPI |
+| **App server** | uvicorn | none | Streamlit's own | uvicorn | uvicorn |
+| **Data lives in** | SQLite file | browser `localStorage` | SQLite file | SQLite file *(and vanishes)* | SQLite file |
+| **Packaged as** | nothing | static files | a repo | Docker image | nothing — runs directly |
+| **Public entry point** | none | GitHub's CDN | Streamlit's servers | Google's front end | nginx you configured |
+| **Kept running by** | your terminal | nothing to run | Streamlit | Cloud Run | systemd you configured |
+| **HTTPS from** | none | GitHub | Streamlit | Google | certbot you ran |
+| **Runs on** | your laptop | no server at all | their container | their container | your VM |
+
+Stages 0, 3, and 4 share the top four rows *exactly*. Everything that
+differs between them is in the bottom half — which is the definition of a
+hosting concern rather than an application concern.
+
+---
+
 ## Why the app has three versions
 
 Stages 0, 3, and 4 run **identical** FastAPI + SQLite code — that's the
