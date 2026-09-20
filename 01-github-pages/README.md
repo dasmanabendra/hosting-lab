@@ -107,6 +107,50 @@ The last command is the one that isn't obvious — see below.
 
 ---
 
+## Try it yourself
+
+The site is live, so these use the real thing:
+https://dasmanabendra.github.io/hosting-lab/
+
+1. **Prove there's no server.** Add some todos on the live site. Now open
+   the same URL in a private/incognito window. Empty list. Same URL, same
+   server, different browser storage — because the "storage" was never on
+   the server at all.
+
+2. **Prove the code ships to the visitor.** Press `Ctrl+U` on the live page
+   to view its source. You're reading the entire application — every line of
+   logic. Nothing is hidden, which is why a static site can never hold a
+   password or API key.
+
+3. **See where the data actually lives.** Press `F12`, go to the
+   Application tab (Chrome/Edge) or Storage tab (Firefox), and find Local
+   Storage. Your todos are sitting there as text. Delete the entry and
+   refresh the page — they're gone, and no server ever knew.
+
+4. **Trigger a real deploy.** Change a word in `index.html`, then commit and
+   push. Watch the Actions tab on GitHub run the workflow, and see the live
+   site update roughly a minute later — with nobody clicking "publish."
+
+5. **Compare load behaviour.** Open the Network tab and reload. Notice the
+   page loads once and then *nothing further happens* as you add todos —
+   no network traffic at all, because every interaction is local. In stage 2
+   every click will hit the network.
+
+---
+
+## Troubleshooting
+
+| Symptom | What's happening | Fix |
+|---|---|---|
+| Workflow fails: `Get Pages site failed... Not Found` | Pages isn't enabled yet | Settings → Pages → Source: **GitHub Actions**, then re-run the workflow |
+| Pushed, but the site is unchanged | The workflow didn't run, or failed | Check the **Actions** tab; a red ✗ shows what broke |
+| Site shows 404 | Pages is enabled but nothing published, or the path is wrong | Confirm the workflow's `path:` matches the folder name exactly |
+| Changes appear for you but not others | Their browser cached the old version | Hard refresh (`Ctrl+Shift+R`); CDN caching can also lag a minute |
+| Todos vanished | Browser data was cleared, or you're in a different browser/device | Expected behaviour — this is the lesson, not a bug |
+| `gh api` fails: `invalid API endpoint` | Git Bash rewrote the leading slash into a file path | Drop the leading slash: `repos/owner/repo/pages` |
+
+---
+
 ## What this model gives you, and what it costs
 
 **Gives:** free forever, extremely fast, HTTPS included, essentially
@@ -118,6 +162,8 @@ whose data belongs to one browser. Wrong for anything where two people need
 to see the same thing.
 
 That limitation is what drives stage 2.
+
+**Next:** [Stage 2 — Streamlit Community Cloud](../02-streamlit/)
 
 ---
 

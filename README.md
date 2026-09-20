@@ -1,13 +1,69 @@
-# Learning Hosting
+# Hosting: a zero-to-hero manual
 
-Hands-on path through deploying a web app for real — a small **todo list**,
-hosted four different ways, each stage removing (or adding back) one layer
-of "someone else handles this for you."
+Learn web hosting by deploying one small **todo list** four different ways —
+each stage removing (or handing back) one layer of "someone else handles
+this for you."
 
-This repo is written to be re-readable. If you're coming back to it after
-months away, read this file top to bottom, then the stage READMEs in order.
-Everything you need to reconstruct both the theory and the implementation
-is here — no outside notes required.
+Written for someone who is **not** a software developer. No prior knowledge
+is assumed: every technical term is explained where it's used, and each
+chapter ends with a glossary of its own vocabulary.
+
+Written to be re-readable. Coming back after months away, this manual alone
+should reconstruct both the theory and the implementation — no outside
+notes required.
+
+---
+
+## Contents
+
+**Foundations**
+- [Chapter 0 — How the web actually works](docs/how-the-web-works.md)
+  *Start here if "server," "DNS," or "port" are unfamiliar.*
+- [Before you start: the mechanics](#before-you-start-the-mechanics) — terminal, Python, git
+- [Glossary](#glossary)
+
+**The stages** — each builds on the last
+
+| # | Stage | What hosts it | The idea it teaches |
+|---|-------|----------------|------------------|
+| 0 | [The local app](00-local-app/) | Your machine | What you're deploying, and why it works here |
+| 1 | [GitHub Pages](01-github-pages/) | GitHub (static) | Static hosting's ceiling: no backend, no shared data |
+| 2 | [Streamlit Community Cloud](02-streamlit/) | Streamlit | A real backend, zero infrastructure — and data becomes *shared* |
+| 3 | [Google Cloud Run](03-google-cloud-run/) | Google | Containers, autoscaling — and why stateless hosting destroys SQLite |
+| 4 | [Oracle Cloud VM](04-oracle-vps/) | Oracle | Everything the others automated, done by hand |
+
+**Reference and synthesis**
+- [The four hosting models, compared](#the-four-hosting-models-compared)
+- [The tech stack, explained](#the-tech-stack-explained)
+- [Chapter 5 — Choosing a host for your next project](docs/choosing-a-host.md)
+- [Chapter 6 — Not getting hacked](docs/security-basics.md)
+- [Chapter 7 — What this manual didn't teach you](docs/where-to-go-next.md)
+
+---
+
+## How to use this manual
+
+**If you're starting from zero:** read
+[chapter 0](docs/how-the-web-works.md), then
+["Before you start"](#before-you-start-the-mechanics) below, then work the
+stages in order. Each has a "Try it yourself" section — do those. Reading
+about deployment teaches roughly as much as reading about swimming.
+
+**If you're returning to refresh:** the
+[comparison table](#the-four-hosting-models-compared) and
+[chapter 5](docs/choosing-a-host.md) are the highest-value pages. Each
+stage's appendix works as a standalone glossary.
+
+**If you have a decision to make right now:** go straight to
+[chapter 5](docs/choosing-a-host.md).
+
+### What you'll be able to do at the end
+
+- Explain what happens between typing a URL and seeing a page
+- Deploy a static site, a Python app, a container, and a hand-built server
+- Diagnose the common failures (502s, cold starts, vanishing data)
+- Choose a hosting model for a new project and defend the choice
+- Recognise which problems are worth paying someone else to solve
 
 ---
 
@@ -41,15 +97,30 @@ library — which would collide if everything shared one pile. So each
 project gets a **virtual environment**: a private folder (here, `.venv`)
 holding that project's own copy of Python and its libraries.
 
+```powershell
+# Windows (PowerShell)
+python -m venv .venv                             # create it (once per project)
+.venv\Scripts\pip install -r requirements.txt    # install the libraries into it
+```
+
 ```bash
-python -m venv .venv      # create the private environment (once)
-.venv\Scripts\pip install -r requirements.txt   # install this project's libraries into it
+# Mac / Linux
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 ```
 
 `pip` is Python's installer. `requirements.txt` is just a list of library
-names and versions — the "shopping list" pip reads. Running the app from
-`.venv\Scripts\` rather than plain `python` is what makes it use that
+names and versions — the "shopping list" pip reads. Running things from
+inside `.venv` rather than plain `python` is what makes them use that
 private environment instead of your system-wide one.
+
+**Commands in this manual are written for Windows**, since that's where it
+was built. The only difference on Mac/Linux is the slashes and folder name:
+`.venv\Scripts\` becomes `.venv/bin/`.
+
+**To stop a running app**, press `Ctrl+C` in the terminal where it's
+running. Closing the terminal window also stops it — which is the whole
+problem stages 1–4 exist to solve.
 
 **Git and GitHub are two different things.** Git records snapshots of your
 files over time, on your own machine. GitHub is a website that stores a
@@ -194,23 +265,30 @@ A **tech stack** is just the list of technologies stacked on top of each
 other to make one working app. The word is literal: each layer sits on the
 one below and depends on it.
 
-### The layers, bottom to top
+### The layers
 
-For a typical web app, including ours:
+Reading downward, from the code you write to the machine it lands on:
 
-| Layer | Job | Ours |
-|---|---|---|
-| **Language** | What the code is written in | Python |
-| **Web framework** | Turns incoming requests into your code, and your code's output into a web page | FastAPI |
-| **Application server** | The program that actually listens on a network port and stays running | uvicorn |
-| **Database** | Stores data so it survives after a request finishes | SQLite |
-| **Reverse proxy** *(stage 4 only)* | Faces the public internet, handles HTTPS, forwards inward | nginx |
-| **Process manager** *(stage 4 only)* | Keeps the app running and restarts it | systemd |
-| **Runtime environment** | Where all of the above physically executes | Your laptop → a container → a VM |
+| | Layer | Job | Ours |
+|---|---|---|---|
+| ↑ *the app* | **Language** | What the code is written in | Python |
+| | **Web framework** | Turns an incoming request into your code, and your code's output into a web page | FastAPI |
+| | **Application server** | The program that actually listens on a network port and stays running | uvicorn |
+| | **Database** | Stores data so it survives after a request finishes | SQLite |
+| ↓ *the hosting* | **Reverse proxy** *(stage 4 only)* | Faces the public internet, handles HTTPS, forwards inward | nginx |
+| | **Process manager** *(stage 4 only)* | Keeps the app running, restarts it on crash or reboot | systemd |
+| | **Runtime environment** | Where all of the above physically executes | Your laptop → a container → a VM |
 
-The top three layers are what "hosting" actually decides. In stage 2
-Streamlit supplies them invisibly; in stage 3 you define them in a
-Dockerfile; in stage 4 you install them yourself.
+**The split in the middle is the whole point of this project.** The top four
+rows are *your application* — they stay essentially identical from stage 0
+to stage 4. The bottom three are *hosting*, and they're what each platform
+argues about:
+
+- **Stage 1** has none of them, because there's no app to run.
+- **Stage 2** supplies all three invisibly; you never learn what they are.
+- **Stage 3** lets you define the runtime environment (in a Dockerfile) while
+  still handling the proxy and process management for you.
+- **Stage 4** hands you all three and walks away.
 
 ### The confusing one: FastAPI vs uvicorn
 
@@ -301,18 +379,6 @@ Those rewrites aren't detours — each platform's constraints *are* the lesson.
 
 ---
 
-## Stages
-
-| # | Stage | What hosts it | What it teaches |
-|---|-------|----------------|------------------|
-| 00 | [Local app](00-local-app/) | Your machine | The app itself: FastAPI + SQLite, run with `uvicorn` |
-| 01 | [GitHub Pages](01-github-pages/) | GitHub (static) | Static hosting's ceiling: no backend, no shared state |
-| 02 | [Streamlit Community Cloud](02-streamlit/) | Streamlit's cloud | A real Python backend, zero infrastructure decisions |
-| 03 | [Google Cloud Run](03-google-cloud-run/) | Google Cloud | Containers, autoscaling, and why stateless hosting breaks SQLite |
-| 04 | [Oracle Cloud VM](04-oracle-vps/) | Oracle Cloud | Everything Cloud Run automated, done by hand |
-
----
-
 ## Status
 
 | Stage | Built | Tested locally | Deployed |
@@ -346,3 +412,30 @@ It's public, so anything committed is permanently exposed. Credentials
 files, GitHub Actions secrets, or the cloud provider's own console — never
 in tracked files. The `.gitignore` guards the common filename patterns, but
 the real protection is not pasting secrets anywhere near the repo.
+
+If one ever does leak: **revoke and reissue it immediately.** Deleting the
+commit does not help — git keeps history, and public repos are scraped for
+exactly this within seconds. Full detail in
+[chapter 6](docs/security-basics.md).
+
+---
+
+## Repo layout
+
+```
+README.md                  this manual's front page
+docs/
+  how-the-web-works.md     chapter 0 — foundations
+  choosing-a-host.md       chapter 5 — picking a host for a new project
+  security-basics.md       chapter 6 — not getting hacked
+  where-to-go-next.md      chapter 7 — the map beyond this manual
+00-local-app/              the FastAPI + SQLite todo app
+01-github-pages/           static HTML/JS variant  → deployed
+02-streamlit/              Streamlit variant
+03-google-cloud-run/       the stage 0 app + a Dockerfile
+04-oracle-vps/             the stage 0 app + systemd, nginx, deploy scripts
+.github/workflows/         the Pages deploy automation
+```
+
+Each stage folder's README is self-contained: theory, implementation,
+exercises, troubleshooting, and a glossary of its own terms.

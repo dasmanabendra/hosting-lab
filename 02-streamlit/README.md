@@ -122,6 +122,46 @@ this whole repo is public, and why no credentials can ever be committed.
 
 ---
 
+## Try it yourself
+
+1. **Watch the whole script re-run.** Add `print("script ran")` at the top
+   of `app.py`, run it locally, and click anything. The terminal prints
+   again on *every* interaction. That's Streamlit's entire model, and it's
+   why a slow line of code makes the whole app feel slow.
+
+2. **Prove the data is shared, not per-browser.** Add a todo, then open the
+   app in a private window — or send the link to someone else. Same list.
+   This is the exact opposite of stage 1, with no code written to make it so.
+
+3. **Find where it's stored.** Stop the app and look at
+   `02-streamlit/data/todos.db`. It's a file, same as stage 0 — the
+   difference is only *whose machine* it's on.
+
+4. **Break it deliberately.** Delete that file while the app is stopped,
+   then restart. Empty list. On the deployed version, a redeploy can do
+   exactly this to you without asking — the mild version of stage 3's
+   problem.
+
+5. **Feel a cold start.** Once deployed, leave the app untouched for a day,
+   then load it. Note how long it takes before anything appears. Compare
+   that to the instant load of stage 1's static page.
+
+---
+
+## Troubleshooting
+
+| Symptom | What's happening | Fix |
+|---|---|---|
+| Clicking a checkbox does nothing | The widget and the database disagree about who's in charge — see gotchas above | Use `st.button`, and let the database be the only source of truth |
+| Deploy fails while installing | A library version can't install on the Python version Streamlit uses | Check the build log; loosen or update the pin in `requirements.txt` |
+| `ModuleNotFoundError` after deploying | The library isn't listed in `requirements.txt` | Add it, push — the deploy re-runs automatically |
+| Streamlit can't find the app | The main file path is wrong | It must be `02-streamlit/app.py`, including the folder |
+| Deployed app is stuck "in the oven" / sleeping | Free-tier apps idle out | Wait for the wake-up; it's normal, not broken |
+| Todos disappeared after a push | The container was rebuilt, taking the database file with it | Expected on this platform — the fix is a real database, which is stage 3's lesson |
+| UI updates lag behind the data | A write happened without a re-run | Call `st.rerun()` after any database change |
+
+---
+
 ## What this model gives you, and what it costs
 
 **Gives:** a real backend and database with essentially zero infrastructure
@@ -134,6 +174,8 @@ locked into Streamlit's UI conventions. Also: your repo must be public.
 Stage 3 keeps the "someone else runs it" convenience but hands back control
 of the environment — via containers — and in doing so breaks persistence
 completely.
+
+**Next:** [Stage 3 — Google Cloud Run](../03-google-cloud-run/)
 
 ---
 

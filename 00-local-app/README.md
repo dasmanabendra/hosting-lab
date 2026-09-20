@@ -40,14 +40,16 @@ inverts this completely — all JavaScript, no server.
 **Stack:** Python, FastAPI (the web framework), uvicorn (the program that
 actually listens on the port), SQLite (the database).
 
-```bash
+```powershell
 python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\uvicorn app.main:app --reload
 ```
 
+On Mac/Linux, `.venv\Scripts\` is `.venv/bin/` instead.
+
 Open http://127.0.0.1:8000 — add a todo, mark it done, delete it, refresh
-to confirm it persists.
+to confirm it persists. **Press `Ctrl+C` in the terminal to stop it.**
 
 `app.main:app` means "in the file `app/main.py`, use the variable named
 `app`." `--reload` restarts the server when you edit code — a development
@@ -55,7 +57,7 @@ convenience you would never use in production.
 
 ### What the code does
 
-[`app/main.py`](app/main.py), roughly 120 lines:
+All of it is in [`app/main.py`](app/main.py) — one file, about 120 lines:
 
 | Route | Purpose |
 |---|---|
@@ -90,11 +92,59 @@ which directory you launch it from.
 
 ---
 
+## Try it yourself
+
+Do these — they take minutes and each one makes a later stage obvious.
+
+1. **Prove it's a real server.** With the app running, visit
+   http://127.0.0.1:8000/health in your browser. You'll see
+   `{"status":"ok"}` — no page, just data. That's the same app answering a
+   different question.
+
+2. **Prove the data is on disk, not in the program.** Add a few todos. Stop
+   the app (`Ctrl+C`). Start it again. The todos are still there — they were
+   never in the app's memory, they're in `data/todos.db`.
+
+3. **Now delete that file** (with the app stopped) and start it again.
+   Empty list. You just did, by hand, exactly what Cloud Run will do to you
+   accidentally in stage 3.
+
+4. **Watch the redirect happen.** Press `F12` in your browser, open the
+   Network tab, then add a todo. You'll see two entries: a `POST /todos`
+   answered with `303`, then a `GET /` answered with `200`. That's the
+   Post/Redirect/Get pattern, visible.
+
+5. **Try to reach it from your phone.** Put your phone on the same wi-fi and
+   visit `http://<your-computer's-IP>:8000`. It won't work — the app is
+   bound to `127.0.0.1`, which means "this machine only." *That* is the
+   thing every remaining stage exists to fix.
+
+---
+
+## Troubleshooting
+
+| Symptom | What's happening | Fix |
+|---|---|---|
+| `[Errno 10048]` / "address already in use" | Something is already on port 8000 — often a copy of this app you forgot to stop | Stop the old one, or run on another port: `--port 8001` |
+| `ModuleNotFoundError: No module named 'fastapi'` | You're running system Python, not the virtual environment's | Use the full path: `.venv\Scripts\uvicorn`, not plain `uvicorn` |
+| `RuntimeError: Form data requires "python-multipart"` | That library is missing | `.venv\Scripts\pip install -r requirements.txt` |
+| Browser shows "can't connect" | The app isn't running, or you used the wrong port | Check the terminal is still showing `Uvicorn running on...` |
+| Changes to the code do nothing | You started it without `--reload` | Restart with `--reload`, or stop and start after each edit |
+| `python` is not recognised | Python isn't installed, or isn't on your PATH | Install from python.org, ticking "Add Python to PATH" |
+
+**How to read an error:** the useful line is almost always the *last* one,
+not the wall of text above it. That wall is the path the program took to get
+there; the final line is what actually went wrong.
+
+---
+
 ## What this stage costs you
 
 Nothing runs unless you start it, nobody but you can reach it, and it stops
 when you close the terminal. Every stage after this one is about solving
 exactly that.
+
+**Next:** [Stage 1 — GitHub Pages](../01-github-pages/)
 
 ---
 
@@ -129,3 +179,8 @@ exactly that.
 | **`--reload`** | A development-only option that restarts the app whenever you edit a file. Never used in production. |
 | **`app.main:app`** | Tells uvicorn where to find the app: "in the file `app/main.py`, use the variable named `app`." |
 | **`python-multipart`** | A small library FastAPI needs in order to read submitted form data. Not installed automatically, hence the crash described above. |
+| **JSON** | A plain-text format for structured data, used when a response is meant for another program rather than a person. `/health` returns JSON; `/` returns HTML. |
+| **Row** | One record in a database table — here, one todo. |
+| **Production** | The real, live version people actually use, as opposed to the copy on your machine for development. Some conveniences (`--reload`) belong only in the latter. |
+| **`__file__`** | A Python value meaning "the location of this code file." Used so the app finds its database relative to itself, not to wherever you happened to run the command from. |
+| **`Ctrl+C`** | The keystroke that stops a running program in the terminal. |

@@ -135,6 +135,54 @@ container to scale to zero, come back, and watch it be gone.
 
 ---
 
+## Try it yourself
+
+1. **Look inside a container.** With the image built, run
+   `docker run -it todo-app /bin/bash`. You get a shell inside a complete
+   miniature Linux. Run `ls`, `python --version`, `cat app/main.py`. Type
+   `exit` to leave. That whole world ships with your app.
+
+2. **Prove containers start empty every time.** Run the app, add a todo,
+   stop the container (`Ctrl+C`), and start it again with the same command.
+   Gone. Not a Cloud Run quirk — that's how containers work, and Cloud Run
+   just does it to you automatically.
+
+3. **Prove the image is self-contained.** Delete your `.venv` folder. Run
+   the container again. It still works — nothing on your machine is involved
+   any more except Docker itself.
+
+4. **Break it on purpose.** Change the Dockerfile's last line to hardcode
+   `--port 8000` instead of `$PORT`, rebuild, and deploy. Cloud Run will
+   fail to start the container, because it told you which port to use and
+   you ignored it. Change it back.
+
+5. **The main event.** Once deployed: add several todos, close the tab, wait
+   long enough for the service to scale to zero (15+ minutes with no
+   traffic), then reload. Watch them be gone. Sit with that for a moment —
+   it's the most important thing in this manual.
+
+6. **See two instances disagree** (optional). Deploy with
+   `--min-instances 2`, then reload repeatedly. Different requests hit
+   different containers with different database files, so the list flickers
+   between two versions of reality.
+
+---
+
+## Troubleshooting
+
+| Symptom | What's happening | Fix |
+|---|---|---|
+| `docker` commands hang or say "cannot connect to the daemon" | Docker Desktop's engine isn't running | Open Docker Desktop, complete any first-run dialog, wait for "Engine running" |
+| Cloud Run deploy fails: "container failed to start and listen" | The app isn't listening on `$PORT`, or bound to `127.0.0.1` | Must be `--host 0.0.0.0 --port $PORT` |
+| Deployed URL returns 403 | The service is private | Redeploy with `--allow-unauthenticated` |
+| Todos keep disappearing | Working exactly as designed | Not fixable on local disk — needs a managed database |
+| Different visitors see different lists | Multiple instances, each with its own file | Same cause, same fix |
+| First request after idle takes several seconds | Cold start — a container is booting | Normal; `--min-instances 1` avoids it but costs money |
+| Build is very slow every time | Dependencies reinstall on each build | Ensure `COPY requirements.txt` and `RUN pip install` come *before* `COPY app/` |
+| `gcloud: command not found` | The CLI isn't installed | Install the Google Cloud SDK, then `gcloud auth login` |
+
+---
+
 ## What this model gives you, and what it costs
 
 **Gives:** you control the entire runtime via the Dockerfile; automatic
@@ -144,6 +192,14 @@ deploy; the same image runs anywhere.
 **Costs:** you must learn containers; **no persistent local storage at all**,
 so any real app needs a separate managed database; cold starts after idle;
 usage-based billing that could charge you under heavy traffic.
+
+Before deploying, set a **budget alert** on the Google Cloud project. The
+free tier is generous, but it's an allowance rather than a hard limit —
+exceeding it bills you rather than switching you off.
+
+**Next:** [Stage 4 — the Oracle VM](../04-oracle-vps/) — but read
+[chapter 6, Not getting hacked](../docs/security-basics.md) first, since
+stage 4 puts a Linux machine on the public internet in your name.
 
 ---
 

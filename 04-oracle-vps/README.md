@@ -145,6 +145,69 @@ Watch for:
 
 ---
 
+## Try it yourself
+
+Each of these teaches one piece of the machine. Run them on the VM.
+
+1. **Watch systemd do its job.** Kill the app deliberately:
+   `sudo systemctl status todo-app` to find its process ID, then
+   `sudo kill <pid>`. Check the status again — it's already running, with a
+   new process ID. `Restart=always` did that, in under three seconds. This
+   is the thing Cloud Run was quietly doing for you.
+
+2. **Prove the app isn't publicly reachable.** From your own machine, try
+   `http://<server-ip>:8000`. Nothing — the app is bound to `127.0.0.1`.
+   Then `curl http://127.0.0.1:8000` *on the VM itself*: it works. The only
+   public path in is through nginx.
+
+3. **Cause a 502, then fix it.** `sudo systemctl stop todo-app`, then load
+   the site. nginx answers with **502 Bad Gateway** — the front door is
+   fine, nobody's home behind it. `sudo systemctl start todo-app` fixes it.
+   Now that status code will mean something forever.
+
+4. **Read the logs.** `sudo journalctl -u todo-app -f` streams the app's
+   output live. Load the site in a browser and watch requests appear. This
+   is how you debug a server you can't see.
+
+5. **Prove the data survives a reboot.** Add todos, then
+   `sudo reboot`. Wait a minute, reconnect, load the site. Everything is
+   still there and the app restarted itself — persistent disk plus
+   `WantedBy=multi-user.target`. This is the exact experiment that
+   *fails* on Cloud Run.
+
+6. **Inspect the certificate.** After `enable-https.sh`, click the padlock
+   in your browser and read the certificate: who issued it, which name it
+   covers, when it expires. Then `sudo certbot renew --dry-run` to confirm
+   it will renew itself before that date.
+
+---
+
+## Troubleshooting
+
+The most common failures, roughly in the order you'll meet them.
+
+| Symptom | What's happening | Fix |
+|---|---|---|
+| SSH hangs or times out | Port 22 blocked by Oracle's security list, or wrong IP | Check the security list in the Oracle console |
+| SSH says "permission denied (publickey)" | Wrong key, or wrong username | Oracle Ubuntu images use `ubuntu@<ip>`, with the key you created at launch |
+| Site unreachable, but SSH works | Ports 80/443 not open | **Both** firewalls must allow them: Oracle's security list *and* `iptables` |
+| **502 Bad Gateway** | nginx is up; the app behind it is not | `sudo systemctl status todo-app`, then `journalctl -u todo-app -n 50` |
+| 504 Gateway Timeout | The app is running but too slow to answer | Check the logs for what's hanging |
+| nginx won't start | A syntax error in the config | `sudo nginx -t` names the file and line |
+| `certbot` fails the challenge | DNS isn't pointing at this server yet, or port 80 is closed | Verify with `nslookup your.domain`; DNS changes take time to propagate |
+| certbot refuses an IP address | Certificates are only issued for names | You need a domain — there's no way around this |
+| App won't start after a code change | A crash on startup | `journalctl -u todo-app -n 50` shows the Python error |
+| `systemctl` says "unit not found" | The service file isn't installed | `sudo cp todo-app.service /etc/systemd/system/ && sudo systemctl daemon-reload` |
+| Everything worked, then stopped after a reboot | The service wasn't enabled for boot | `sudo systemctl enable todo-app` |
+| Disk full | Logs grew unbounded | `df -h` to confirm, `journalctl --vacuum-time=7d` to trim |
+
+**The general method:** work from the outside in. Can DNS resolve the name?
+Can you reach the port? Does nginx answer? Is the app running? Do its logs
+show an error? Each answer eliminates half the possibilities — far faster
+than changing things at random.
+
+---
+
 ## What this model gives you, and what it costs
 
 **Gives:** total control over every layer; genuinely free forever on
@@ -160,6 +223,15 @@ is now something you built and must maintain yourself.
 That's the whole lesson of this project, arrived at the long way: managed
 hosting isn't doing anything magic. It's doing *these specific jobs*, and
 now you know what each one is.
+
+**Before you run this stage:** read
+[chapter 6 — Not getting hacked](../docs/security-basics.md). A VM with a
+public IP starts receiving automated login attempts within minutes, and
+unlike stages 1–3, nobody else is protecting it.
+
+**After this stage:** [chapter 5 — Choosing a host for your next
+project](../docs/choosing-a-host.md) is where all four stages add up to a
+decision you can actually make.
 
 ---
 
