@@ -1,8 +1,8 @@
 # Learning Hosting
 
-Hands-on path through deploying a web app for real — a small "guestbook"
-app, hosted five different ways, each stage removing (or adding back) one
-layer of "someone else handles this for you."
+Hands-on path through deploying a web app for real — a small **todo list**,
+hosted four different ways, each stage removing (or adding back) one layer
+of "someone else handles this for you."
 
 Not every stage can run the exact same code: GitHub Pages has no backend,
 and Streamlit needs its own framework. So the app has a few variants —
